@@ -1,0 +1,25 @@
+language: node_js
+node_js:
+  - 16
+
+services:
+  - docker
+
+before_install:
+  - docker build -t martintrajanovski/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run martintrajanovski/react-test npm run test -- --watchAll=false
+
+after_success:
+  - docker build -t martintrajanovski/multi-client ./client
+  - docker build -t martintrajanovski/multi-nginx ./nginx
+  - docker build -t martintrajanovski/multi-server ./server
+  - docker build -t martintrajanovski/multi-worker ./worker
+  # Login to Dockerhub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to Dockerhub
+  - docker push martintrajanovski/multi-client
+  - docker push martintrajanovski/multi-nginx
+  - docker push martintrajanovski/multi-server
+  - docker push martintrajanovski/multi-worker
